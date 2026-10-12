@@ -1,0 +1,10 @@
+/* Light-DOM rules only; everything inside an embed lives in its shadow root. */
+.inkf-widget { padding: 6px 0; }
+/* Obsidian gives block widgets paint containment, which would clip the floating toolbar. */
+.markdown-source-view.mod-cm6 .cm-content > .inkf-widget,
+.inkf-widget { contain: none !important; overflow: visible !important; }
+.inkf-host { display: block; }
+.inkf-block { margin: 0; }
+.workspace-leaf-content .view-content.inkf-full-view { padding: 0; position: relative; overflow: hidden; }
+.inkf-full-host { position: absolute; inset: 0; }
+.inkf-svg-edit { position: absolute; top: 12px; right: 12px; z-index: 5; }

@@ -1,0 +1,9 @@
+{
+  "id": "tinteiro",
+  "name": "Tinteiro",
+  "version": "1.0.0",
+  "minAppVersion": "1.7.0",
+  "description": "Escrita e desenho à mão nas notas, com motor de tinta na GPU.",
+  "author": "Davi Bezerra Barros",
+  "isDesktopOnly": false
+}
