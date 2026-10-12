@@ -1087,7 +1087,13 @@ export class InkEditor {
 		const center = at ?? { x: (view.minX + view.maxX) / 2, y: (view.minY + view.maxY) / 2 };
 		const maxWidth = this.mode === 'writing' ? WRITING_PAGE_WIDTH * 0.9 : (view.maxX - view.minX) * 0.6;
 		const rect = placeImageRect(center, width, height, this.camera.zoom, maxWidth);
-		this.doc.addUnder([buildImageStroke(src, rect)]);
+		const image = buildImageStroke(src, rect);
+		this.doc.addUnder([image]);
+		// Arrives selected, so it can be moved and resized right away.
+		if (this.tool !== 'select') this.setTool('select');
+		this.selection = new Set([image]);
+		this.syncOverlays();
+		this.cb.onState();
 	}
 
 	/** Last pointer position over the stage in page units, for pasting under the cursor. */

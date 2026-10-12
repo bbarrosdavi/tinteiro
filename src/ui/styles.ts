@@ -223,6 +223,7 @@ export const EMBED_CSS = /* css */ `
 .popover .choice:hover { background: var(--inkf-hover); }
 .popover .choice.is-active { background: color-mix(in srgb, var(--inkf-accent) 18%, transparent); color: var(--inkf-accent); }
 .popover .choice svg { flex: none; }
+.popover .choice.danger { color: var(--text-error, #e5484d); }
 .segmented { display: inline-flex; padding: 2px; border-radius: 10px; background: var(--inkf-hover); }
 .segmented button {
 	border: 0; background: transparent; color: var(--inkf-text); font: inherit;

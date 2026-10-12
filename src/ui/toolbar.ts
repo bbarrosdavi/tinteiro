@@ -39,6 +39,9 @@ export interface ToolbarHost {
 	openFullView?(): void;
 	copyAsImage(): void;
 	convert?(): void;
+	/** Embeds only: copy the embed's markdown, delete the embed. */
+	copyEmbed?(): void;
+	deleteEmbed?(): void;
 	/** Colour theme-following ink is drawn with on this page. */
 	inkColor(): string;
 	gridEnabled(): boolean;
@@ -627,11 +630,17 @@ export class Toolbar {
 			() => h.updateSettings({ toolbarPlacement: s.toolbarPlacement === 'top' ? 'left' : 'top' }),
 		]);
 		if (h.convert) items.push(['convert', h.mode === 'drawing' ? 'Converter em escrita' : 'Converter em desenho', () => h.convert!()]);
+		if (h.copyEmbed) items.push(['copy', 'Copiar embed', () => h.copyEmbed!()]);
+		const danger = new Set<string>();
+		if (h.deleteEmbed) {
+			items.push(['trash', 'Apagar embed', () => h.deleteEmbed!()]);
+			danger.add('Apagar embed');
+		}
 		const list = el(this.doc, 'div');
 		list.style.display = 'flex';
 		list.style.flexDirection = 'column';
 		for (const [icon, label, fn, active] of items) {
-			const b = el(this.doc, 'button', `choice${active ? ' is-active' : ''}`, label);
+			const b = el(this.doc, 'button', `choice${active ? ' is-active' : ''}${danger.has(label) ? ' danger' : ''}`, label);
 			b.insertAdjacentHTML('afterbegin', iconSvg(icon, 18));
 			b.addEventListener('click', () => {
 				this.closePopover();

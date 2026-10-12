@@ -55,6 +55,7 @@ export function readingModeProcessor(host: InkHost) {
 				sourcePath: ctx.sourcePath,
 				params,
 				rewrite: update => void rewriteInFile(host, ctx.sourcePath, linkPath, mode, update),
+				remove: () => void removeFromFile(host, ctx.sourcePath, linkPath, mode),
 			});
 			embedEl.replaceWith(embed.el);
 			link?.remove();
@@ -83,6 +84,22 @@ function pathFromSrc(host: InkHost, el: HTMLElement, sourcePath: string): string
 		// Not a URL.
 	}
 	return null;
+}
+
+/** Takes the embed (and its line, when nothing else is on it) out of the note. */
+async function removeFromFile(host: InkHost, notePath: string, linkPath: string, mode: InkMode): Promise<void> {
+	const note = host.app.vault.getAbstractFileByPath(notePath);
+	if (!(note instanceof TFile)) return;
+	await host.app.vault.process(note, text => {
+		const m = findEmbeds(text).find(x => x.path === linkPath && x.mode === mode);
+		if (!m) return text;
+		const lineStart = text.lastIndexOf('\n', m.from - 1) + 1;
+		const nl = text.indexOf('\n', m.to);
+		const lineEnd = nl < 0 ? text.length : nl;
+		const rest = (text.slice(lineStart, m.from) + text.slice(m.to, lineEnd)).trim();
+		if (rest) return text.slice(0, m.from) + text.slice(m.to);
+		return text.slice(0, lineStart) + text.slice(nl < 0 ? lineEnd : lineEnd + 1);
+	});
 }
 
 /** Reading view has no editor: the note file is edited directly, one embed line at a time. */

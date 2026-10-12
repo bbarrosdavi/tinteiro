@@ -180,6 +180,8 @@ export class InkSurface implements ActiveSurface {
 				this.toolbar?.update();
 			},
 			addLines: this.actions.addLines,
+			copyEmbed: this.actions.copyEmbed,
+			deleteEmbed: this.actions.deleteEmbed,
 		};
 	}
 

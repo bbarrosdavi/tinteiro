@@ -1,4 +1,4 @@
-import { Notice, TFile } from 'obsidian';
+import { Menu, Notice, TFile } from 'obsidian';
 import type { InkHost } from '../plugin-api';
 import type { DocEntry } from './doc-store';
 import { InkSurface } from './surface';
@@ -6,7 +6,8 @@ import { adoptEmbedStyles } from '../ui/styles';
 import { iconSvg } from '../ui/icons';
 import type { InkMode } from '../model/types';
 import { WRITING_PAGE_WIDTH } from '../model/constants';
-import { withDrawingDefaults, type EmbedParams } from '../obsidian/embed-syntax';
+import { buildEmbedMarkdown, withDrawingDefaults, type EmbedParams } from '../obsidian/embed-syntax';
+import { removeEmbedFlow } from '../obsidian/remove-embed';
 import { convertStrokes } from './convert';
 
 /**
@@ -215,6 +216,8 @@ export class InkEmbed {
 			openFullView: () => { void this.openFullView(); },
 			convert: () => { void this.convert(); },
 			addLines: this.ctx.mode === 'writing' ? () => { this.extraLines += 3; this.layout(); } : undefined,
+			copyEmbed: () => this.copyEmbed(),
+			deleteEmbed: this.ctx.remove ? () => this.deleteEmbed() : undefined,
 		};
 		this.surface = surface;
 		this.state = 'locked';
@@ -345,6 +348,18 @@ export class InkEmbed {
 		};
 		this.stage.addEventListener('pointerdown', onDown);
 		this.stage.addEventListener('pointerup', onUp);
+		// Right click or long press on a locked embed: the embed's own menu.
+		this.stage.addEventListener('contextmenu', e => {
+			if (this.state !== 'locked' && this.state !== 'missing') return;
+			e.preventDefault();
+			e.stopPropagation();
+			const menu = new Menu();
+			if (this.state === 'locked') menu.addItem(i => i.setTitle('Editar').setIcon('pencil').onClick(() => this.unlock()));
+			if (this.file) menu.addItem(i => i.setTitle('Abrir em tela cheia').setIcon('maximize-2').onClick(() => void this.openFullView()));
+			menu.addItem(i => i.setTitle('Copiar embed').setIcon('copy').onClick(() => this.copyEmbed()));
+			if (this.ctx.remove) menu.addItem(i => i.setTitle('Apagar embed').setIcon('trash-2').setWarning(true).onClick(() => this.deleteEmbed()));
+			menu.showAtMouseEvent(e);
+		});
 		// Clicks inside must never move the note's cursor onto the embed's markdown.
 		const stop = (e: Event) => e.stopPropagation();
 		this.root.addEventListener('mousedown', stop);
@@ -499,6 +514,18 @@ export class InkEmbed {
 		await this.ctx.host.docs.flush(this.entry.path);
 		this.ctx.rewrite({ mode: to, params });
 		new Notice(to === 'writing' ? 'Convertido em escrita' : 'Convertido em desenho');
+	}
+
+	private copyEmbed(): void {
+		const md = buildEmbedMarkdown(this.ctx.mode, this.ctx.linkPath, this.ctx.params);
+		void navigator.clipboard.writeText(md).then(() => new Notice('Embed copiado'), () => new Notice('Não foi possível copiar'));
+	}
+
+	private deleteEmbed(): void {
+		const remove = this.ctx.remove;
+		if (!remove) return;
+		if (this.state === 'editing') this.lock();
+		removeEmbedFlow(this.ctx.host.app, this.file, this.ctx.mode, remove);
 	}
 
 	// Banners
