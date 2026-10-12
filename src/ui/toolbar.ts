@@ -106,7 +106,7 @@ export class Toolbar {
 	private buttons = new Map<string, HTMLButtonElement>();
 	private popover: HTMLDivElement | null = null;
 	private popoverKind: PopoverKind | null = null;
-	private selectionGroup: HTMLElement[] = [];
+	private selRow: HTMLDivElement | null = null;
 	private outsideHandler = (e: PointerEvent) => {
 		if (!this.popover) return;
 		const path = e.composedPath();
@@ -224,14 +224,19 @@ export class Toolbar {
 		}
 		bar.append(this.btn('shapes', 'shapes', 'Figuras (Shift: 15° e proporção regular)', b => this.togglePopover('shapes', b)));
 
-		// Contextual: only while something is selected.
-		const selSep = this.sep();
+		// Contextual: a row of its own in the same panel, only while something is selected,
+		// so the tool row never grows (and never pushes tools out of a narrow page).
+		this.selRow = el(this.doc, 'div', 'toolbar sel-row');
 		const del = this.btn('sel-delete', 'trash', 'Apagar seleção', () => h.deleteSelection());
 		const dup = this.btn('sel-dup', 'duplicate', 'Duplicar', () => h.duplicateSelection());
 		const copy = this.btn('sel-copy', 'copy', 'Copiar', () => h.copySelection());
-		const recolor = this.btn('sel-color', 'palette', 'Mudar cor da seleção', b => this.togglePopover('selColor', b));
-		this.selectionGroup = [selSep, del, dup, copy, recolor];
-		bar.append(...this.selectionGroup);
+		this.selRow.append(del, dup, copy);
+		// With the palette on the bar, its swatches recolour the selection; otherwise a drawer does.
+		if (!h.settings().toolbarSwatches) {
+			this.selRow.append(this.btn('sel-color', 'palette', 'Mudar cor da seleção', b => this.togglePopover('selColor', b)));
+		}
+		if (this.sub) this.panel.insertBefore(this.selRow, this.sub);
+		else this.panel.append(this.selRow);
 
 		bar.append(
 			this.sep(),
@@ -260,6 +265,10 @@ export class Toolbar {
 			b.addEventListener('pointerdown', e => e.stopPropagation());
 			b.addEventListener('click', e => {
 				e.stopPropagation();
+				if (h.selectionCount() > 0) {
+					h.recolorSelection(value);
+					return;
+				}
 				h.updateSettings(this.colorPatch(value));
 				const t = h.tool();
 				if (t === 'erase' || t === 'select' || t === 'pan') h.setTool('draw');
@@ -318,7 +327,7 @@ export class Toolbar {
 		}
 
 		const selCount = h.selectionCount();
-		for (const node of this.selectionGroup) show(node, selCount > 0);
+		if (this.selRow) show(this.selRow, selCount > 0);
 		show(this.buttons.get('frame'), h.mode === 'drawing' && h.embedded && h.framingDirty());
 
 		if (this.popover && this.popoverKind) this.refreshPopover();

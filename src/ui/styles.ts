@@ -90,7 +90,10 @@ export const EMBED_CSS = /* css */ `
 }
 .dock .pin { pointer-events: none; height: 0; }
 .dock--top .pin { position: sticky; top: calc(8px + var(--inkf-bar-h) - var(--inkf-pin-pad, 0px)); }
-.dock--top .panel { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 8px); }
+/* The pin is a zero-height flex line: the panel sits on it (overflowing upwards), centred, as wide
+   as its tools allow and never wider than the page, where the tool row wraps instead of hiding tools. */
+.dock--top .pin { display: flex; justify-content: center; align-items: flex-end; }
+.dock--top .panel { position: relative; flex: 0 1 auto; min-width: 0; margin-bottom: 4px; max-width: calc(100% - 8px); }
 .dock--left .pin { position: sticky; top: calc(4px - var(--inkf-pin-pad, 0px)); }
 .dock--left .panel { position: absolute; top: 0; left: 4px; max-height: calc(100vh - 140px); }
 .embed.full .dock--top .pin { position: absolute; top: calc(8px + var(--inkf-bar-h)); left: 0; right: 0; }
@@ -99,8 +102,10 @@ export const EMBED_CSS = /* css */ `
 .panel { display: flex; pointer-events: auto; overflow: hidden; }
 .dock--top .panel { flex-direction: column; align-items: center; }
 .dock--left .panel { flex-direction: row; align-items: center; }
-.dock--top .toolbar { flex-direction: row; max-width: 100%; }
-.dock--left .toolbar { flex-direction: column; max-height: 100%; }
+.dock--top .toolbar { flex-direction: row; max-width: 100%; flex-wrap: wrap; justify-content: center; }
+.sel-row { padding: 0 calc(6px * var(--inkf-scale)) calc(2px * var(--inkf-scale)); }
+.dock--left .sel-row { padding: calc(6px * var(--inkf-scale)) calc(2px * var(--inkf-scale)) calc(6px * var(--inkf-scale)) 0; }
+.dock--left .toolbar { flex-direction: column; max-height: 100%; flex-wrap: wrap; }
 /* The palette row lives in the same panel, under the tools (beside them on the left). */
 .swatch-row { padding: 0 calc(8px * var(--inkf-scale)) calc(6px * var(--inkf-scale)); gap: 0; }
 .dock--left .swatch-row { padding: calc(8px * var(--inkf-scale)) calc(6px * var(--inkf-scale)) calc(8px * var(--inkf-scale)) 0; }
